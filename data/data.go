@@ -1,25 +1,30 @@
 package data
 
 type Product struct {
-	Id            int
+	ID            uint
 	Name          string
 	Description   string
 	ProductImgURL string
+	Category      Category
 	ChildVariants []Variant
 }
 
 type Variant struct {
-	Id            int
+	ID            uint
 	Name          string
 	MRP           int
 	DiscountPrice int
 	Size          int
 	Colour        string
+	ProductID     uint
 }
 
 type Category struct {
-	Id       int
-	Name     string
-	Child    []Category
-	Products []Product
+	ID             uint
+	Name           string
+	ChildCategory  []Category
+	ChildID        uint
+	ParentCategory *Category
+	ParentID       uint
+	Products       []Product
 }
