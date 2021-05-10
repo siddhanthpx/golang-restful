@@ -1,12 +1,12 @@
 package data
 
 type Product struct {
-	ID            uint
-	Name          string
-	Description   string
-	ProductImgURL string
-	Category      Category
-	ChildVariants []Variant
+	ID            int       `bson:"_id, omitempty"`
+	Name          string    `bson:"name, omitempty"`
+	Alias         string    `bson:"alias, omitempty"`
+	Description   string    `bson:"description, omitempty"`
+	ProductImgURL string    `bson:"productimgurl, omitempty"`
+	ChildVariants []Variant `bson:"childvariants, omitempty"`
 }
 
 type Variant struct {
@@ -20,11 +20,12 @@ type Variant struct {
 }
 
 type Category struct {
-	ID             uint
-	Name           string
-	ChildCategory  []Category
-	ChildID        uint
-	ParentCategory *Category
-	ParentID       uint
-	Products       []Product
+	ID             int        `bson:"_id, omitempty"`
+	Name           string     `bson:"name, omitempty"`
+	Alias          string     `bson:"alias, omitempty"`
+	ChildCategory  []Category `bson:"child_category, omitempty"`
+	ChildID        int        `bson:"child_id, omitempty"`
+	ParentCategory string     `bson:"parent_category, omitempty"`
+	ParentID       int        `bson:"parent_id, omitempty"`
+	Products       []Product  `bson:"products, omitempty"`
 }

@@ -14,7 +14,18 @@ import (
 )
 
 func SetupRoutes(g *gin.Engine) {
-	g.GET("/:category", handlers.GetCategory)
+
+	//Category and Subcategory
+	g.GET("/shop", handlers.GetAllCategories)
+	g.GET("/shop/:category/:subcategory", handlers.GetSubcategory)
+	g.GET("/shop/:category", handlers.GetCategory)
+	g.POST("/shop/:category/new", handlers.AddSubcategory)
+	g.POST("/shop/category/new", handlers.AddCategory)
+	g.DELETE("/shop/:category/:subcategory", handlers.DeleteSubcategory)
+
+	//Products and Variants
+	g.GET("/shop/:category/:subcategory/products", handlers.GetProducts)
+	g.GET("/shop/:category/:subcategory/:product", handlers.GetProduct)
 
 	//Listening on localhost:8080/
 	srv := &http.Server{
