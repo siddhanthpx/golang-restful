@@ -321,10 +321,13 @@ func AddProduct(c *gin.Context) {
 		return
 	}
 
-	filter := bson.D{{"alias", category}, {"child_category", subcat}}
+	filter := bson.D{
+		{"alias", category},
+		{"child_category.alias", subcat},
+	}
 	update := bson.D{
 		{"$push", bson.D{
-			{"products", product},
+			{"child_category.$.products", product},
 		},
 		},
 	}
