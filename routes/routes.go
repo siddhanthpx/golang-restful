@@ -26,6 +26,8 @@ func SetupRoutes(g *gin.Engine) {
 	//Products and Variants
 	g.GET("/shop/:category/:subcategory/products", handlers.GetProducts)
 	g.GET("/shop/:category/:subcategory/:product", handlers.GetProduct)
+	g.GET("/shop/:category/:subcategory/:product/:variant", handlers.GetVariant)
+	g.POST("/shop/:category/:subcategory/new", handlers.AddProduct) // TODO
 
 	//Listening on localhost:8080/
 	srv := &http.Server{

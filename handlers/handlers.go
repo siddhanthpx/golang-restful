@@ -6,6 +6,7 @@ import (
 	"golang-restful/data"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -186,29 +187,32 @@ func DeleteSubcategory(c *gin.Context) {
 
 	collection := mongoClient.Database("shop").Collection("category")
 
-	var c1 data.Category
-
 	filter := bson.D{
 		{"alias", category},
-		{"child_category._id", subcat},
+		{"child_category.alias", subcat},
 	}
-	update := bson.D{
-		{"$pull", bson.D{
-			{"child_category._id", subcat},
-		},
-		},
-	}
+	result := collection.FindOne(context.Background(), filter)
 
-	err = collection.FindOneAndUpdate(context.Background(), filter, update).Decode(&c1)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err,
-			"result":  c1,
+	var cat data.Category
+	if err := result.Decode(&cat); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "could not find category",
 		})
 		return
 	}
 
-	c.JSON(http.StatusAccepted, c1)
+	update := bson.M{"$pull": bson.M{"child_category": bson.M{"alias": subcat}}}
+
+	err = collection.FindOneAndUpdate(context.Background(), filter, update).Decode(&cat)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err,
+			"result":  cat,
+		})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, cat)
 
 }
 
@@ -287,6 +291,113 @@ func GetProduct(c *gin.Context) {
 				if CurrentProduct.Alias == product {
 					c.JSON(http.StatusOK, CurrentProduct)
 					return
+				}
+			}
+		}
+	}
+}
+
+func AddProduct(c *gin.Context) {
+
+	category, catOk := c.Params.Get("category")
+	queryChecker(catOk, c)
+
+	subcat, subcatOk := c.Params.Get("subcategory")
+	queryChecker(subcatOk, c)
+
+	mongoClient, err := client.NewClient()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	collection := mongoClient.Database("shop").Collection("category")
+
+	var product data.Product
+	if err := c.ShouldBindJSON(&product); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Unable to add new product",
+		})
+		return
+	}
+
+	filter := bson.D{{"alias", category}, {"child_category", subcat}}
+	update := bson.D{
+		{"$push", bson.D{
+			{"products", product},
+		},
+		},
+	}
+
+	err = collection.FindOneAndUpdate(context.Background(), filter, update).Decode(&product)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err,
+		})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, product)
+}
+
+func GetVariant(c *gin.Context) {
+
+	category, catOk := c.Params.Get("category")
+	queryChecker(catOk, c)
+
+	subcat, subcatOk := c.Params.Get("subcategory")
+	queryChecker(subcatOk, c)
+
+	product, productOk := c.Params.Get("product")
+	queryChecker(productOk, c)
+
+	variant, variantOk := c.Params.Get("variant")
+	queryChecker(variantOk, c)
+
+	mongoClient, err := client.NewClient()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	filter := bson.D{
+		{"alias", category},
+		{"child_category.alias", subcat},
+	}
+	collection := mongoClient.Database("shop").Collection("category")
+	result := collection.FindOne(context.Background(), filter)
+
+	var cat data.Category
+	if err := result.Decode(&cat); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "could not find category",
+		})
+		return
+	}
+
+	variantID, err := strconv.Atoi(variant)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "could not find variant",
+		})
+		return
+	}
+
+	for _, subcategory := range cat.ChildCategory {
+		if subcategory.Alias == subcat {
+			for _, CurrentProduct := range subcategory.Products {
+				if CurrentProduct.Alias == product {
+					for _, CurrentVariant := range CurrentProduct.ChildVariants {
+						if CurrentVariant.ID == uint(variantID) {
+							c.JSON(http.StatusOK, CurrentVariant)
+							return
+						} else {
+							c.JSON(http.StatusNotFound, gin.H{
+								"message": "could not find variant",
+							})
+							return
+						}
+					}
 				}
 			}
 		}
