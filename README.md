@@ -14,4 +14,4 @@ To run the application :
 
 ``` go run main.go ```
 
-Which starts the server on 'localhost:8080/shop'
+Which starts the server on `localhost:8080/shop`
