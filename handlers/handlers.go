@@ -528,7 +528,7 @@ func DeleteVariant(c *gin.Context) {
 	product, productOk := c.Params.Get("product")
 	queryChecker(productOk, c)
 
-	variant, variantOk := c.Params.Get("variant")
+	variantString, variantOk := c.Params.Get("variant")
 	queryChecker(variantOk, c)
 
 	mongoClient, err := client.NewClient()
@@ -549,6 +549,12 @@ func DeleteVariant(c *gin.Context) {
 
 	filter := bson.D{
 		{"alias", category},
+	}
+
+	variant, err := strconv.Atoi(variantString)
+	if err != nil {
+		log.Fatal(err)
+		return
 	}
 
 	update := bson.M{"$pull": bson.M{"child_category.$[w].products.$[product].childvariants": bson.M{"id": variant}}}
