@@ -135,6 +135,37 @@ func AddCategory(c *gin.Context) {
 
 }
 
+func DeleteCategory(c *gin.Context) {
+
+	category, catOk := c.Params.Get("category")
+	queryChecker(catOk, c)
+
+	mongoClient, err := client.NewClient()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	collection := mongoClient.Database("shop").Collection("category")
+
+	filter := bson.D{
+		{"alias", category},
+	}
+	var cat data.Category
+
+	err = collection.FindOneAndDelete(context.Background(), filter).Decode(&cat)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err,
+			"result":  cat,
+		})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, cat)
+
+}
+
 func AddSubcategory(c *gin.Context) {
 
 	category, catOk := c.Params.Get("category")

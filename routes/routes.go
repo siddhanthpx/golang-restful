@@ -22,6 +22,7 @@ func SetupRoutes(g *gin.Engine) {
 	g.POST("/shop/:category/new", handlers.AddSubcategory)
 	g.POST("/shop/category/new", handlers.AddCategory)
 	g.DELETE("/shop/:category/:subcategory", handlers.DeleteSubcategory)
+	g.DELETE("/shop/:category", handlers.DeleteCategory)
 
 	//Products and Variants
 	g.GET("/shop/:category/:subcategory/products", handlers.GetProducts)
