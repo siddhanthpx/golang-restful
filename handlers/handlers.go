@@ -77,6 +77,7 @@ func GetSubcategory(c *gin.Context) {
 }
 
 func GetCategory(c *gin.Context) {
+
 	category, catOk := c.Params.Get("category")
 	queryChecker(catOk, c)
 
@@ -102,6 +103,7 @@ func GetCategory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, cat)
+
 }
 
 func AddCategory(c *gin.Context) {
@@ -130,6 +132,7 @@ func AddCategory(c *gin.Context) {
 
 	log.Println(result.InsertedID)
 	c.JSON(http.StatusOK, c1)
+
 }
 
 func AddSubcategory(c *gin.Context) {
@@ -296,6 +299,7 @@ func GetProduct(c *gin.Context) {
 			}
 		}
 	}
+
 }
 
 func AddProduct(c *gin.Context) {
@@ -342,6 +346,57 @@ func AddProduct(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, product)
+
+}
+
+func DeleteProduct(c *gin.Context) {
+
+	category, catOk := c.Params.Get("category")
+	queryChecker(catOk, c)
+
+	subcat, subcatOk := c.Params.Get("subcategory")
+	queryChecker(subcatOk, c)
+
+	product, productOk := c.Params.Get("product")
+	queryChecker(productOk, c)
+
+	mongoClient, err := client.NewClient()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	collection := mongoClient.Database("shop").Collection("category")
+
+	opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{
+		Filters: []interface{}{bson.D{
+			{"w.alias", subcat},
+		}}})
+
+	filter := bson.D{
+		{"alias", category},
+	}
+
+	update := bson.D{
+		{"$pull", bson.M{
+			"child_category.$[w].products": bson.M{"alias": product},
+		},
+		},
+	}
+
+	var cat data.Category
+
+	err = collection.FindOneAndUpdate(context.Background(), filter, update, opts).Decode(&cat)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err,
+			"result":  cat,
+		})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, cat)
+
 }
 
 func GetVariant(c *gin.Context) {
@@ -392,13 +447,8 @@ func GetVariant(c *gin.Context) {
 			for _, CurrentProduct := range subcategory.Products {
 				if CurrentProduct.Alias == product {
 					for _, CurrentVariant := range CurrentProduct.ChildVariants {
-						if CurrentVariant.ID == uint(variantID) {
+						if CurrentVariant.ID == variantID {
 							c.JSON(http.StatusOK, CurrentVariant)
-							return
-						} else {
-							c.JSON(http.StatusNotFound, gin.H{
-								"message": "could not find variant",
-							})
 							return
 						}
 					}
@@ -406,6 +456,7 @@ func GetVariant(c *gin.Context) {
 			}
 		}
 	}
+
 }
 
 func AddVariant(c *gin.Context) {
@@ -463,13 +514,66 @@ func AddVariant(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, PostVariant)
+
+}
+
+func DeleteVariant(c *gin.Context) {
+
+	category, catOk := c.Params.Get("category")
+	queryChecker(catOk, c)
+
+	subcat, subcatOk := c.Params.Get("subcategory")
+	queryChecker(subcatOk, c)
+
+	product, productOk := c.Params.Get("product")
+	queryChecker(productOk, c)
+
+	variant, variantOk := c.Params.Get("variant")
+	queryChecker(variantOk, c)
+
+	mongoClient, err := client.NewClient()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	collection := mongoClient.Database("shop").Collection("category")
+
+	opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{
+		Filters: []interface{}{bson.D{
+			{"w.alias", subcat},
+		}, bson.D{
+			{"product.alias", product},
+		},
+		}})
+
+	filter := bson.D{
+		{"alias", category},
+	}
+
+	update := bson.M{"$pull": bson.M{"child_category.$[w].products.$[product].childvariants": bson.M{"id": variant}}}
+	var cat data.Category
+
+	err = collection.FindOneAndUpdate(context.Background(), filter, update, opts).Decode(&cat)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err,
+			"result":  cat,
+		})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, cat)
+
 }
 
 func queryChecker(ok bool, c *gin.Context) {
+
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "invalid query",
 		})
 		return
 	}
+
 }

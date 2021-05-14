@@ -10,7 +10,7 @@ type Product struct {
 }
 
 type Variant struct {
-	ID            uint   `bson:"_id, omitempty"`
+	ID            int    `bson:"id, omitempty"`
 	Name          string `bson:"name, omitempty"`
 	MRP           int    `bson:"mrp, omitempty"`
 	DiscountPrice int    `bson:"discountprice, omitempty"`

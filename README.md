@@ -3,7 +3,7 @@ RESTFUL API built with gin and mongodb
 
 clone the repo :
 
-``` git clone https://github.com/siddhanthpx/golang-restful.git ```
+``` git clone github.com/siddhanthpx/golang-restful.git ```
 
 
 To restore the database from dump : 
