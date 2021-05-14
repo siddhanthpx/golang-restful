@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GetAllCategories(c *gin.Context) {
@@ -405,6 +406,63 @@ func GetVariant(c *gin.Context) {
 			}
 		}
 	}
+}
+
+func AddVariant(c *gin.Context) {
+
+	category, catOk := c.Params.Get("category")
+	queryChecker(catOk, c)
+
+	subcat, subcatOk := c.Params.Get("subcategory")
+	queryChecker(subcatOk, c)
+
+	product, productOk := c.Params.Get("product")
+	queryChecker(productOk, c)
+
+	mongoClient, err := client.NewClient()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	collection := mongoClient.Database("shop").Collection("category")
+
+	var PostVariant data.Variant
+	if err := c.ShouldBindJSON(&PostVariant); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Unable to add new variant",
+		})
+		return
+	}
+
+	opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{
+		Filters: []interface{}{bson.D{
+			{"w.alias", subcat},
+		}, bson.D{
+			{"product.alias", product},
+		},
+		}})
+
+	filter := bson.D{
+		{"alias", category},
+	}
+
+	update := bson.D{
+		{"$push", bson.D{
+			{"child_category.$[w].products.$[product].childvariants", PostVariant},
+		},
+		},
+	}
+
+	err = collection.FindOneAndUpdate(context.Background(), filter, update, opts).Decode(&PostVariant)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err,
+		})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, PostVariant)
 }
 
 func queryChecker(ok bool, c *gin.Context) {

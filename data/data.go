@@ -10,13 +10,13 @@ type Product struct {
 }
 
 type Variant struct {
-	ID            uint
-	Name          string
-	MRP           int
-	DiscountPrice int
-	Size          int
-	Colour        string
-	ProductID     uint
+	ID            uint   `bson:"_id, omitempty"`
+	Name          string `bson:"name, omitempty"`
+	MRP           int    `bson:"mrp, omitempty"`
+	DiscountPrice int    `bson:"discountprice, omitempty"`
+	Size          int    `bson:"size, omitempty"`
+	Colour        string `bson:"colour, omitempty"`
+	ProductID     uint   `bson:"productid, omitempty"`
 }
 
 type Category struct {
