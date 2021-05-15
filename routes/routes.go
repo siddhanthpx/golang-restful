@@ -19,8 +19,10 @@ func SetupRoutes(g *gin.Engine) {
 	g.GET("/shop", handlers.GetAllCategories)
 	g.GET("/shop/:category/:subcategory", handlers.GetSubcategory)
 	g.GET("/shop/:category", handlers.GetCategory)
+
 	g.POST("/shop/:category/new", handlers.AddSubcategory)
 	g.POST("/shop/category/new", handlers.AddCategory)
+
 	g.DELETE("/shop/:category/:subcategory", handlers.DeleteSubcategory)
 	g.DELETE("/shop/:category", handlers.DeleteCategory)
 
@@ -28,8 +30,10 @@ func SetupRoutes(g *gin.Engine) {
 	g.GET("/shop/:category/:subcategory/products", handlers.GetProducts)
 	g.GET("/shop/:category/:subcategory/:product", handlers.GetProduct)
 	g.GET("/shop/:category/:subcategory/:product/:variant", handlers.GetVariant)
+
 	g.POST("/shop/:category/:subcategory/new", handlers.AddProduct)
 	g.POST("/shop/:category/:subcategory/:product/new", handlers.AddVariant)
+
 	g.DELETE("/shop/:category/:subcategory/:product", handlers.DeleteProduct)
 	g.DELETE("/shop/:category/:subcategory/:product/:variant", handlers.DeleteVariant)
 

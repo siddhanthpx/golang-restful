@@ -37,6 +37,36 @@ func GetAllCategories(c *gin.Context) {
 
 }
 
+func GetCategory(c *gin.Context) {
+
+	category, catOk := c.Params.Get("category")
+	queryChecker(catOk, c)
+
+	mongoClient, err := client.NewClient()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	filter := bson.D{
+		{"alias", category},
+	}
+
+	collection := mongoClient.Database("shop").Collection("category")
+	result := collection.FindOne(context.Background(), filter)
+
+	var cat data.Category
+	if err := result.Decode(&cat); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "could not find category",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, cat)
+
+}
+
 func GetSubcategory(c *gin.Context) {
 
 	category, catOk := c.Params.Get("category")
@@ -72,36 +102,6 @@ func GetSubcategory(c *gin.Context) {
 			return
 		}
 	}
-
-}
-
-func GetCategory(c *gin.Context) {
-
-	category, catOk := c.Params.Get("category")
-	queryChecker(catOk, c)
-
-	mongoClient, err := client.NewClient()
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	filter := bson.D{
-		{"alias", category},
-	}
-
-	collection := mongoClient.Database("shop").Collection("category")
-	result := collection.FindOne(context.Background(), filter)
-
-	var cat data.Category
-	if err := result.Decode(&cat); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"message": "could not find category",
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, cat)
 
 }
 
